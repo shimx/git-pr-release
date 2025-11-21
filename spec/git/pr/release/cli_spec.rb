@@ -411,19 +411,19 @@ RSpec.describe Git::Pr::Release::CLI do
       @cli = configured_cli
 
       @merged_prs = [double(Sawyer::Resource)]
-      allow(@cli).to receive(:build_pr_title_and_body) { ["PR Title", "PR Body"] }
+      allow(@cli).to receive(:build_pr_title_and_body) { ["PR Title", "PR Body".force_encoding(Encoding::ASCII_8BIT)] }
       allow(@cli).to receive(:merge_pr_body) { "Merged Body" }
     }
 
     context "When release_pr exists" do
-      let(:release_pr) { double(body: "Old Body") }
+      let(:release_pr) { double(body: "【Old Body】") }
       let(:changed_files) { [double(Sawyer::Resource)] }
 
       it {
         is_expected.to eq ["PR Title", "Merged Body"]
 
         expect(@cli).to have_received(:build_pr_title_and_body).with(release_pr, @merged_prs, changed_files, nil)
-        expect(@cli).to have_received(:merge_pr_body).with("Old Body", "PR Body")
+        expect(@cli).to have_received(:merge_pr_body).with("【Old Body】", "PR Body")
       }
     end
 
