@@ -113,20 +113,18 @@ ERB
 
         def merge_pr_body(old_body, new_body)
           # Try to take over checklist statuses
-          force_encoded_old_body = old_body.force_encoding('UTF-8')
-          force_encoded_new_body = new_body.force_encoding('UTF-8')
           pr_body_lines = []
 
           check_status = {}
-          force_encoded_old_body.split(/\r?\n/).each { |line|
+          old_body.split(/\r?\n/).each { |line|
             line.match(/^- \[(?<check_value>[ x])\] #(?<issue_number>\d+)/) { |m|
               say "Found pull-request checkbox \##{m[:issue_number]} is #{m[:check_value]}.", :trace
               check_status[m[:issue_number]] = m[:check_value]
             }
           }
-          old_body_unchecked = force_encoded_old_body.gsub /^- \[[ x]\] \#(\d+)/, '- [ ] #\1'
+          old_body_unchecked = old_body.gsub /^- \[[ x]\] \#(\d+)/, '- [ ] #\1'
 
-          Diff::LCS.traverse_balanced(old_body_unchecked.split(/\r?\n/), force_encoded_new_body.split(/\r?\n/)) do |event|
+          Diff::LCS.traverse_balanced(old_body_unchecked.split(/\r?\n/), new_body.split(/\r?\n/)) do |event|
             say "diff: #{event.inspect}", :trace
             action, old, new = *event
             old_nr, old_line = *old
