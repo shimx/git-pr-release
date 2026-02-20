@@ -730,11 +730,11 @@ RSpec.describe Git::Pr::Release::CLI do
     end
 
     context "When SHAs exceed query length limit" do
-      # Create enough SHAs to exceed the 256 character limit for the dynamic portion
+      # Create enough SHAs to exceed the 200 character limit for the dynamic portion
       # query_base = "repo:motemen/git-pr-release is:pr is:closed" (about 47 characters)
       # Each SHA is 7 characters + 1 space = 8 characters
-      # To exceed 256 characters in dynamic part: 256 / 8 = 32 SHAs
-      let(:shas) { (1..35).map { |i| sprintf("%07d", i) } }
+      # To exceed 200 characters in dynamic part: 200 / 8 = 25 SHAs
+      let(:shas) { (1..28).map { |i| sprintf("%07d", i) } }
 
       it "splits into multiple search requests" do
         subject
@@ -742,15 +742,15 @@ RSpec.describe Git::Pr::Release::CLI do
         expect(@cli).to have_received(:search_issue_numbers).at_least(2).times
       end
 
-      it "correctly calculates query length by subtracting query_base length" do
-        query_base = "repo:motemen/git-pr-release is:pr is:closed"
+      it "correctly splits queries to stay within 200 character dynamic portion limit" do
         call_count = 0
+        query_base = "repo:motemen/git-pr-release is:pr is:closed"
 
         allow(@cli).to receive(:search_issue_numbers) do |query|
           call_count += 1
-          # Verify that each query's dynamic portion (excluding query_base) doesn't exceed 256 characters
-          dynamic_portion_length = query.length - query_base.length
-          expect(dynamic_portion_length).to be <= 256
+          # Verify that the dynamic portion doesn't exceed 200 characters
+          dynamic_length = query.length - query_base.length
+          expect(dynamic_length).to be <= 200
           [123]
         end
 
